@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Base",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+
+    // incremental здесь намеренно выключен: кэш .tsbuildinfo, записанный
+    // прогоном `tsc --noEmit`, заставляет следующую сборку считать проект
+    // актуальным и не выдавать файлы. Вместе с `deleteOutDir` в nest-cli.json
+    // это даёт молча пустой dist — сборка «успешна», а запускать нечего.
+  },
+  "exclude": ["node_modules", "dist", ".next", "coverage"]
+}

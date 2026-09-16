@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Nest.js",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+
+    // Nest строится на декораторах, а @nestjs/swagger и DI читают типы через метаданные.
+    // Без этой пары не работает ни внедрение зависимостей по типу, ни автогенерация OpenAPI.
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    // декораторы Nest несовместимы с isolatedModules-транспиляцией через SWC по умолчанию
+    "isolatedModules": false,
+
+    "declaration": false,
+    "declarationMap": false,
+    "removeComments": true,
+    "noEmit": false
+  }
+}

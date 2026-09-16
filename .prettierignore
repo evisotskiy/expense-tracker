@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.next/
+.turbo/
+coverage/
+pnpm-lock.yaml
+packages/database/src/generated/
+
+# .prisma форматируется через `pnpm --filter @expense-tracker/database db:format`
+*.prisma
