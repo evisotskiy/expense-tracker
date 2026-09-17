@@ -1,7 +1,20 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { CreateCategoryInput, UpdateCategoryInput } from '@expense-tracker/shared';
+// Не `import type`: нужен instanceof для распознавания P2002 при гонке на unique(userId, name).
+import { Prisma } from '@expense-tracker/database';
 
 import { PrismaService } from '../../prisma/prisma.service';
+
+/** Ровно поля categorySchema: userId — деталь хранилища, клиенту он не нужен. */
+const CATEGORY_SELECT = {
+  id: true,
+  name: true,
+  icon: true,
+  color: true,
+  isArchived: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.CategorySelect;
 
 @Injectable()
 export class CategoriesService {
@@ -16,18 +29,95 @@ export class CategoriesService {
     return this.prisma.client.category.findMany({
       where: { userId, isArchived: false },
       orderBy: { name: 'asc' },
+      select: CATEGORY_SELECT,
     });
   }
 
-  async create(_userId: string, _input: CreateCategoryInput) {
-    throw new Error('Не реализовано');
+  /**
+   * Предварительной проверки «занято ли имя» нет: это TOCTOU-гонка между SELECT
+   * и INSERT, уникальный индекс @@unique([userId, name]) — единственный настоящий
+   * арбитр (то же рассуждение, что в users.repository.ts).
+   */
+  async create(userId: string, input: CreateCategoryInput) {
+    try {
+      return await this.prisma.client.category.create({
+        data: { userId, ...input },
+        select: CATEGORY_SELECT,
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        return this.reviveArchived(userId, input);
+      }
+
+      throw error;
+    }
   }
 
-  async update(_userId: string, _id: string, _input: UpdateCategoryInput) {
-    throw new Error('Не реализовано');
+  /**
+   * findFirst с userId в where обязателен: update({ where: { id } }) без него
+   * задел бы чужую категорию — id угадывается, userId в токене нет смысла проверять
+   * отдельно.
+   */
+  async update(userId: string, id: string, input: UpdateCategoryInput) {
+    const existing = await this.prisma.client.category.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Категория не найдена');
+    }
+
+    try {
+      return await this.prisma.client.category.update({
+        where: { id },
+        data: input,
+        select: CATEGORY_SELECT,
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('Категория с таким названием уже есть');
+      }
+
+      throw error;
+    }
   }
 
-  async remove(_userId: string, _id: string) {
-    throw new Error('Не реализовано');
+  /**
+   * Мягкое удаление: Budget.categoryId имеет onDelete: Cascade, физическое удаление
+   * категории безвозвратно снесло бы связанные бюджеты. updateMany, а не update —
+   * только он позволяет отфильтровать по userId в одном запросе с id.
+   */
+  async remove(userId: string, id: string) {
+    const { count } = await this.prisma.client.category.updateMany({
+      where: { id, userId, isArchived: false },
+      data: { isArchived: true },
+    });
+
+    if (count === 0) {
+      throw new NotFoundException('Категория не найдена');
+    }
+  }
+
+  /**
+   * P2002 на @@unique([userId, name]) означает конфликт с уже существующей записью —
+   * активной или архивной. Архивная не видна в findAll, поэтому для пользователя
+   * это выглядит как свободное имя: восстанавливаем её с новыми icon/color вместо
+   * того, чтобы вернуть 409 на пустом месте.
+   */
+  private async reviveArchived(userId: string, input: CreateCategoryInput) {
+    const existing = await this.prisma.client.category.findUnique({
+      where: { userId_name: { userId, name: input.name } },
+    });
+
+    if (!existing || !existing.isArchived) {
+      throw new ConflictException('Категория с таким названием уже есть');
+    }
+
+    return this.prisma.client.category.update({
+      where: { id: existing.id },
+      data: { isArchived: false, icon: input.icon, color: input.color },
+      select: CATEGORY_SELECT,
+    });
   }
 }

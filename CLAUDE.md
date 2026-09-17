@@ -99,3 +99,18 @@ pnpm --filter @expense-tracker/web lint
 - ESLint (flat config): обязательны inline type imports (`import { type Foo }` / `import type`), `no-console` кроме `warn`/`error`, `eqeqeq: smart`. Для Nest отключены правила о «бесполезном конструкторе» — это parameter properties DI.
 - TS строгий, включая `noUncheckedIndexedAccess` и `noImplicitOverride` (отсюда `override canActivate` в guard).
 - Новый модуль API: `modules/<имя>/{<имя>.module.ts, .controller.ts, .service.ts, dto/<имя>.dto.ts}`, регистрация в `app.module.ts`, схемы — в `packages/shared`.
+
+## Планы
+
+Планы заметных задач хранятся в репозитории, в `.claude/plans/`, парой файлов:
+
+| Файл | Содержимое |
+| --- | --- |
+| `<имя>.md` | сам план: контекст (зачем задача), изменения по файлам, раздел «Порядок работ», раздел «Проверка» |
+| `<имя>.tasks.md` | чеклист `- [ ]` по разделам, порядок совпадает с «Порядком работ» плана |
+
+Образец — пара `auth-users-cqrs-jwt.md` / `auth-users-cqrs-jwt.tasks.md`.
+
+Чеклист ведётся по ходу реализации (`[ ]` → `[x]`) и коммитится вместе с кодом: план остаётся в истории проекта рядом с изменениями, которые он описывает, а не только в переписке. Внеплановые находки дописываются в конец tasks-файла отдельным разделом — см. раздел 8 в `auth-users-cqrs-jwt.tasks.md`.
+
+Оба файла — на русском, как и весь остальной репозиторий.
