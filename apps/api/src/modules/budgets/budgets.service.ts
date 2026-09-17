@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   toMoneyString,
   type CreateBudgetData,
@@ -6,11 +6,12 @@ import {
 } from '@expense-tracker/shared';
 import type { Prisma } from '@expense-tracker/database';
 
-import { type PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class BudgetsService {
-  constructor(private readonly prisma: PrismaService) {}
+  // @Inject: см. common/guards/jwt-auth.guard.ts.
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async findAll(userId: string) {
     const rows = await this.prisma.client.budget.findMany({

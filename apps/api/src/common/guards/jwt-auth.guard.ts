@@ -1,5 +1,5 @@
-import { Injectable, type ExecutionContext } from '@nestjs/common';
-import { type Reflector } from '@nestjs/core';
+import { Inject, Injectable, type ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -9,7 +9,12 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
  */
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  constructor(private readonly reflector: Reflector) {
+  // @Inject(Reflector) — явный токен, а не только тип параметра. Reflector здесь
+  // используется исключительно как тип, и при emitDecoratorMetadata с erased
+  // (type-only) импортом design:paramtypes получил бы global Function вместо
+  // класса Reflector — Nest не смог бы резолвить зависимость («Function» вместо
+  // токена). @Inject снимает эту зависимость от реэкспорта типа в JS.
+  constructor(@Inject(Reflector) private readonly reflector: Reflector) {
     super();
   }
 

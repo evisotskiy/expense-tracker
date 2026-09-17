@@ -1,13 +1,15 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { type UsersService } from './users.service';
+import { UsersService } from './users.service';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  // @Inject: UsersService используется здесь только как тип параметра —
+  // подробности в common/guards/jwt-auth.guard.ts.
+  constructor(@Inject(UsersService) private readonly usersService: UsersService) {}
 
   @Get('me')
   @ApiOperation({ summary: 'Профиль текущего пользователя' })

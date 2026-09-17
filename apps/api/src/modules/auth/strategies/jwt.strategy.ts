@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { type ConfigService } from '@nestjs/config';
+import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
@@ -8,7 +8,9 @@ import type { JwtPayload } from '../auth.types';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(config: ConfigService<Env, true>) {
+  // @Inject: ConfigService используется здесь только как тип параметра —
+  // подробности в common/guards/jwt-auth.guard.ts.
+  constructor(@Inject(ConfigService) config: ConfigService<Env, true>) {
     super({
       // access-токен фронтенд хранит в памяти и шлёт в заголовке;
       // в cookie лежит только refresh — так XSS не даёт долгоживущего доступа

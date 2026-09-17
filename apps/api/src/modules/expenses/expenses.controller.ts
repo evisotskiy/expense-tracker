@@ -1,14 +1,18 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { type CreateExpenseDto, type ExpenseFiltersDto, type UpdateExpenseDto } from './dto/expense.dto';
-import { type ExpensesService } from './expenses.service';
+import { ExpensesService } from './expenses.service';
 
 @ApiTags('expenses')
 @Controller('expenses')
 export class ExpensesController {
-  constructor(private readonly expensesService: ExpensesService) {}
+  // @Inject: ExpensesService используется здесь только как тип параметра, а при
+  // emitDecoratorMetadata это стирает класс из design:paramtypes (design:paramtypes
+  // получил бы global Function вместо класса) — подробности в
+  // common/guards/jwt-auth.guard.ts. Тот же фикс применён во всех модулях ниже.
+  constructor(@Inject(ExpensesService) private readonly expensesService: ExpensesService) {}
 
   @Get()
   @ApiOperation({ summary: 'Лента расходов с фильтрами и курсорной пагинацией' })

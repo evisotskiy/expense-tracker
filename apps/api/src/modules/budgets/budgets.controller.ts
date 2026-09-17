@@ -1,14 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { type BudgetsService } from './budgets.service';
+import { BudgetsService } from './budgets.service';
 import { type CreateBudgetDto, type UpdateBudgetDto } from './dto/budget.dto';
 
 @ApiTags('budgets')
 @Controller('budgets')
 export class BudgetsController {
-  constructor(private readonly budgetsService: BudgetsService) {}
+  // @Inject: см. common/guards/jwt-auth.guard.ts.
+  constructor(@Inject(BudgetsService) private readonly budgetsService: BudgetsService) {}
 
   @Get()
   @ApiOperation({ summary: 'Бюджеты пользователя' })

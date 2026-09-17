@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { isDuration } from '../common/utils/duration';
+
 /**
  * Схема переменных окружения.
  *
@@ -14,8 +16,10 @@ export const envSchema = z.object({
 
   JWT_ACCESS_SECRET: z.string().min(32, 'Секрет должен быть не короче 32 символов'),
   JWT_REFRESH_SECRET: z.string().min(32, 'Секрет должен быть не короче 32 символов'),
-  JWT_ACCESS_TTL: z.string().default('15m'),
-  JWT_REFRESH_TTL: z.string().default('30d'),
+  // .refine, а не просто default: опечатка в TTL ('15 min' вместо '15m') должна ронять
+  // приложение на старте, а не давать токены со сломанным сроком жизни в проде.
+  JWT_ACCESS_TTL: z.string().default('15m').refine(isDuration, 'Формат: 15m, 2h, 30d'),
+  JWT_REFRESH_TTL: z.string().default('30d').refine(isDuration, 'Формат: 15m, 2h, 30d'),
 
   /** Список origin-ов через запятую. */
   CORS_ORIGIN: z.string().default('http://localhost:3000'),

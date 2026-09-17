@@ -1,25 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { QueryBus } from '@nestjs/cqrs';
 
-import { type PrismaService } from '../../prisma/prisma.service';
+import { GetUserProfileQuery } from './queries/get-user-profile.query';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  // @Inject: QueryBus используется здесь только как тип параметра —
+  // подробности в common/guards/jwt-auth.guard.ts.
+  constructor(@Inject(QueryBus) private readonly queryBus: QueryBus) {}
 
   async findById(id: string) {
-    const user = await this.prisma.client.user.findUnique({
-      where: { id },
-      select: { id: true, email: true, name: true, baseCurrency: true, createdAt: true },
-    });
+    const user = await this.queryBus.execute(new GetUserProfileQuery(id));
 
     if (!user) {
       throw new NotFoundException('Пользователь не найден');
     }
 
     return user;
-  }
-
-  findByEmail(email: string) {
-    return this.prisma.client.user.findUnique({ where: { email } });
   }
 }

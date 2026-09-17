@@ -1,14 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { type CategoriesService } from './categories.service';
+import { CategoriesService } from './categories.service';
 import { type CreateCategoryDto, type UpdateCategoryDto } from './dto/category.dto';
 
 @ApiTags('categories')
 @Controller('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  // @Inject: см. common/guards/jwt-auth.guard.ts.
+  constructor(@Inject(CategoriesService) private readonly categoriesService: CategoriesService) {}
 
   @Get()
   @ApiOperation({ summary: 'Список категорий пользователя' })

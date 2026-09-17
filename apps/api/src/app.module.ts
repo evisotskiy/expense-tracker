@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { CqrsModule } from '@nestjs/cqrs';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ZodValidationPipe } from 'nestjs-zod';
 
@@ -25,6 +26,10 @@ import { UsersModule } from './modules/users/users.module';
       validate: validateEnv,
     }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
+    // global: true — регистрируется один раз здесь; AuthModule и UsersModule
+    // пользуются CommandBus/QueryBus без повторного импорта, обращение между
+    // ними идёт через команды/запросы, а не через прямой импорт сервисов.
+    CqrsModule.forRoot(),
     PrismaModule,
     AuthModule,
     UsersModule,
