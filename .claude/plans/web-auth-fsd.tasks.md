@@ -71,9 +71,9 @@
 
 ## 9. Утилиты shared/lib
 
-- [ ] `shared/lib/form/apply-api-errors.ts` (белый список полей, `'_'` → алерт, 409 → email, 401 → алерт, 429 → свой текст)
-- [ ] `shared/lib/navigation/safe-next-path.ts` (open redirect, кольцо `/login`↔`/register`)
-- [ ] `shared/lib/test/render-with-providers.tsx`
+- [x] `shared/lib/form/apply-api-errors.ts` (белый список полей, `'_'` → алерт, 409 → email, 401 → алерт, 429 → свой текст)
+- [x] `shared/lib/navigation/safe-next-path.ts` (open redirect, кольцо `/login`↔`/register`)
+- [x] `shared/lib/test/render-with-providers.tsx`
 
 ## 10. Примитив PasswordInput
 
