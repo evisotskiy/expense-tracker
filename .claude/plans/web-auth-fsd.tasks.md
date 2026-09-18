@@ -95,13 +95,15 @@
 
 ## 12. Маршруты входа и регистрации (одним шагом — typedRoutes)
 
-- [ ] `features/session-guard/ui/session-splash.tsx`
-- [ ] `features/session-guard/ui/require-auth.tsx`
-- [ ] `features/session-guard/ui/redirect-if-authenticated.tsx` (обёртка `<Suspense>` под `useSearchParams`)
-- [ ] `widgets/auth-layout` (safe-area, `max-w-sm sm:max-w-md`)
-- [ ] `views/login`, `views/register`
-- [ ] `app/(auth)/layout.tsx`, `app/(auth)/login/page.tsx`, `app/(auth)/register/page.tsx`
-- [ ] `pnpm build` (проверка typedRoutes)
+- [x] `features/session-guard/ui/session-splash.tsx`
+- [x] `features/session-guard/ui/require-auth.tsx`
+- [x] `features/session-guard/ui/redirect-if-authenticated.tsx` (обёртка `<Suspense>` под `useSearchParams`)
+- [x] `widgets/auth-layout` (safe-area, `max-w-sm sm:max-w-md`)
+- [x] `views/login`, `views/register`
+- [x] `app/(auth)/layout.tsx`, `app/(auth)/login/page.tsx`, `app/(auth)/register/page.tsx`
+- [x] `pnpm build` (проверка typedRoutes — `'/login'`/`'/dashboard'` касты из шагов 8/11 остаются:
+      `/dashboard` появится только в шаге 13); smoke через `next dev` — оба маршрута отдают 200,
+      SSR корректно показывает SessionSplash до бутстрапа сессии
 
 ## 13. Дашборд
 
