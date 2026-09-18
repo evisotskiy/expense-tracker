@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState, type ReactNode } from 'react';
 
-import { ApiRequestError } from '@/lib/api-client';
+import { ApiRequestError } from '@/shared/api/api-client';
 
 export function QueryProvider({ children }: { children: ReactNode }) {
   // QueryClient создаётся внутри useState, а не в модуле: на сервере модуль общий

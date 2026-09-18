@@ -13,7 +13,7 @@ export class ApiRequestError extends Error {
   }
 }
 
-interface RequestOptions extends Omit<RequestInit, 'body'> {
+export interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   /** Access-токен; на сервере его неоткуда взять из памяти клиента, поэтому передаётся явно. */
   accessToken?: string;

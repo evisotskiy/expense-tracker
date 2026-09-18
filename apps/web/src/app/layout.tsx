@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 
-import { QueryProvider } from '@/providers/query-provider';
+import { QueryProvider } from '@/app/_providers/query-provider';
 
 import './globals.css';
 
