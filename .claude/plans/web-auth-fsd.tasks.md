@@ -82,15 +82,16 @@
 
 ## 11. Формы
 
-- [ ] `features/login-form/model/schema.ts` + `model/use-login.ts`
-- [ ] `features/login-form/ui/login-form.tsx` (чистая, props `onSubmit`) + `index.ts`
-- [ ] `features/login-form/ui/login-form.test.tsx` — 10 кейсов из плана
-- [ ] `features/register-form/model/schema.ts` (`pick` + `extend` + `refine` с `path`)
-- [ ] `features/register-form/model/use-register.ts`
-- [ ] `features/register-form/ui/password-strength-meter.tsx` (`aria-live`, анонс только при смене уровня)
-- [ ] `features/register-form/ui/register-form.tsx` + `index.ts`
-- [ ] `features/register-form/ui/register-form.test.tsx` — 8 кейсов из плана
-- [ ] `pnpm test`
+- [x] `features/login-form/model/schema.ts` + `model/use-login.ts`
+- [x] `features/login-form/ui/login-form.tsx` (чистая, props `onSubmit`) + `index.ts`
+- [x] `features/login-form/ui/login-form.test.tsx` — 8 тестов, покрывают 10 кейсов из плана
+- [x] `features/register-form/model/schema.ts` (`pick` + `extend` + `refine` с `path`)
+- [x] `features/register-form/model/use-register.ts`
+- [x] `features/register-form/ui/password-strength-meter.tsx` (`aria-live`, анонс только при смене уровня;
+      внутри `<FormDescription>` — только `span`, `<div>` внутри `<p>` невалиден и рвёт aria-describedby)
+- [x] `features/register-form/ui/register-form.tsx` + `index.ts`
+- [x] `features/register-form/ui/register-form.test.tsx` — 8 тестов, покрывают кейсы из плана
+- [x] `pnpm test` — 25/25 (коммит следующим)
 
 ## 12. Маршруты входа и регистрации (одним шагом — typedRoutes)
 
@@ -146,3 +147,9 @@
       с этой задачей. Изменения вне `apps/web` отменены; для новых файлов shadcn форматирование
       запускалось точечно (`npx prettier --write <файлы>`). В рамках этой задачи `pnpm format`
       (без аргументов) больше не запускать.
+- [x] `PasswordStrengthMeter` рендерится внутри `<FormDescription>`, а это `<p>` — вложенный `<div>`
+      внутри `<p>` невалиден, браузер закрывает `<p>` раньше времени, и aria-describedby перестаёт
+      видеть текст подсказки. Переписан на `span` с `display` через Tailwind-классы.
+- [x] Подсказка индикатора надёжности пароля может дословно совпасть с текстом ошибки
+      `passwordSchema` (оба говорят «Добавьте цифру» и т.п.) — `getByText`/`findByText` в тестах
+      падают на неоднозначности (найдено 2 совпадения). В тестах на такие сообщения — `getAllByText`.
