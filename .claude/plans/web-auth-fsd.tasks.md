@@ -41,24 +41,25 @@
 
 ## 5. Границы слоёв в ESLint
 
-- [ ] `apps/web/eslint.config.mjs` — генерация запретов по слоям `shared → entities → features → widgets → views → app`
-- [ ] Запрет глубоких импортов мимо `index.ts` слайса и старых каталогов `@/lib`, `@/components`, `@/providers`
-- [ ] `pnpm lint` зелёный
+- [x] `apps/web/eslint.config.mjs` — генерация запретов по слоям `shared → entities → features → widgets → views → app`
+- [x] Запрет глубоких импортов мимо `index.ts` слайса и старых каталогов `@/lib`, `@/components`, `@/providers`
+- [x] `pnpm lint` зелёный (коммит `e806790`); вручную проверено на временных файлах —
+      все 4 категории нарушений ловятся, легитимные импорты проходят
 
 ## 6. Тестовый стенд
 
-- [ ] devDependencies: `vitest@^4`, `vite@^7`, `@vitejs/plugin-react@^5`, `jsdom@^27`, `@testing-library/{react,dom,jest-dom,user-event}`
-- [ ] `apps/web/vitest.config.ts` (jsdom, alias `@`, `globals: false`, `server.deps.external: ['@expense-tracker/shared']`)
-- [ ] `apps/web/vitest.setup.ts` (jest-dom, `cleanup`, `ResizeObserver`, `matchMedia`, Pointer Events)
-- [ ] Скрипты `test` / `test:watch` в `apps/web/package.json` (`turbo.json` не трогаем)
-- [ ] `features/register-form/lib/password-strength.ts` + `.test.ts` — первый живой тест стенда
-- [ ] `pnpm test`
+- [x] devDependencies: `vitest@^4`, `vite@^7`, `@vitejs/plugin-react@^5`, `jsdom@^27`, `@testing-library/{react,dom,jest-dom,user-event}`
+- [x] `apps/web/vitest.config.ts` (jsdom, alias `@`, `globals: false`, `server.deps.external: ['@expense-tracker/shared']`)
+- [x] `apps/web/vitest.setup.ts` (jest-dom, `cleanup`, `ResizeObserver`, `matchMedia`, Pointer Events)
+- [x] Скрипты `test` / `test:watch` в `apps/web/package.json` (`turbo.json` не трогали — задача уже была)
+- [x] `features/register-form/lib/password-strength.ts` + `.test.ts` — первый живой тест стенда
+- [x] `pnpm test` (коммит `d469843`)
 
 ## 7. Транспорт
 
-- [ ] `shared/api/access-token-store.ts` (`client-only`, `expiresIn` в секундах → `* 1_000`)
-- [ ] `shared/api/refresh-session.ts` (single-flight + `navigator.locks`, 401/403 ≠ сеть/5xx)
-- [ ] `shared/api/authorized-fetch.ts` (Bearer, упреждающий refresh, ровно один повтор на 401)
+- [x] `shared/api/access-token-store.ts` (`client-only`, `expiresIn` в секундах → `* 1_000`)
+- [x] `shared/api/refresh-session.ts` (single-flight + `navigator.locks`, 401/403 ≠ сеть/5xx)
+- [x] `shared/api/authorized-fetch.ts` (Bearer, упреждающий refresh, ровно один повтор на 401)
 
 ## 8. Сессия
 
