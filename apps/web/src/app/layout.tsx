@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 
 import { QueryProvider } from '@/providers/query-provider';
 
@@ -9,10 +9,17 @@ export const metadata: Metadata = {
   description: 'Учёт личных расходов, категорий и бюджетов',
 };
 
+// viewportFit: 'cover' обязателен, иначе env(safe-area-inset-*) везде равны нулю
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru">
-      <body className="min-h-screen antialiased">
+      <body className="min-h-dvh antialiased">
         <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
