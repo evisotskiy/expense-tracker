@@ -22,6 +22,12 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // TS-специфичные правила — только на .ts/.tsx: на .js/.mjs (конфиги вроде
+    // eslint.config.mjs) typescript-eslint-парсер может быть подменён другим
+    // пресетом (например, eslint-config-next), и тогда парсер, отдающий
+    // сервисы типов, не совпадает с ожидаемым — правило падает с ошибкой
+    // "requires type information" вместо применения
+    files: ['**/*.ts', '**/*.tsx'],
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -31,6 +37,10 @@ export default [
         'error',
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
       ],
+    },
+  },
+  {
+    rules: {
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       eqeqeq: ['error', 'smart'],
     },
