@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 
-import { QueryProvider } from '@/app/_providers/query-provider';
+import { AppProviders } from '@/app/_providers/app-providers';
 
 import './globals.css';
 
@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ru">
       <body className="min-h-dvh antialiased">
-        <QueryProvider>{children}</QueryProvider>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

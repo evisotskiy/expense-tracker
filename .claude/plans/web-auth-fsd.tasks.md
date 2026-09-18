@@ -63,11 +63,11 @@
 
 ## 8. Сессия
 
-- [ ] `entities/session/model/session-keys.ts`, `types.ts`
-- [ ] `entities/session/model/use-session.ts` (`staleTime`/`gcTime: Infinity`, `retry: false`)
-- [ ] `entities/session/model/session-provider.tsx` (bootstrap + подписка на `onExpired`)
-- [ ] `entities/session/api/session-api.ts`
-- [ ] `app/_providers/app-providers.tsx` и подключение в `app/layout.tsx`
+- [x] `entities/session/model/session-keys.ts`, `types.ts`
+- [x] `entities/session/model/use-session.ts` (`staleTime`/`gcTime: Infinity`, `retry: false`)
+- [x] `entities/session/model/session-provider.tsx` (bootstrap + подписка на `onExpired`)
+- [x] `entities/session/api/session-api.ts`
+- [x] `app/_providers/app-providers.tsx` и подключение в `app/layout.tsx`
 
 ## 9. Утилиты shared/lib
 
