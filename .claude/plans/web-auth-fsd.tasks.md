@@ -107,11 +107,12 @@
 
 ## 13. Дашборд
 
-- [ ] `features/logout-button/model/use-logout.ts` (`onSettled`, порядок `clear` → `clear()` → `setQueryData(null)`)
-- [ ] `features/logout-button/ui/logout-button.tsx` + `.test.tsx`
-- [ ] `widgets/app-header`
-- [ ] `views/dashboard`
-- [ ] `app/(protected)/layout.tsx`, `app/(protected)/dashboard/page.tsx`
+- [x] `features/logout-button/model/use-logout.ts` (`onSettled`, порядок `clear` → `clear()` → `setQueryData(null)`)
+- [x] `features/logout-button/ui/logout-button.tsx` + `.test.tsx`
+- [x] `widgets/app-header`
+- [x] `views/dashboard`
+- [x] `app/(protected)/layout.tsx`, `app/(protected)/dashboard/page.tsx`
+- [x] `pnpm build` — все 4 маршрута (`/`, `/login`, `/register`, `/dashboard`); `pnpm test` 26/26
 
 ## 14. Документация
 
