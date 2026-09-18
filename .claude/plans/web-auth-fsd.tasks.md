@@ -116,11 +116,11 @@
 
 ## 14. Документация
 
-- [ ] `CLAUDE.md` → `## Архитектура`: подраздел «Фронтенд: Feature-Sliced Design»
-- [ ] `CLAUDE.md` → `## Архитектура`: подраздел «Design system: shadcn/ui на Tailwind 4»
-- [ ] `CLAUDE.md` → `## Команды`: тесты web через turbo, убрать «тесты только в apps/api»
-- [ ] `CLAUDE.md` → `## Состояние проекта`: auth реализован (устарело с `bbc05ad`), фронтенд не пустой
-- [ ] `CLAUDE.md` → `## Соглашения`: `authorizedFetch` для защищённых, `apiFetch` для публичных
+- [x] `CLAUDE.md` → `## Архитектура`: подраздел «Фронтенд: Feature-Sliced Design»
+- [x] `CLAUDE.md` → `## Архитектура`: подраздел «Design system: shadcn/ui на Tailwind 4»
+- [x] `CLAUDE.md` → `## Команды`: тесты web через turbo, убрать «тесты только в apps/api»
+- [x] `CLAUDE.md` → `## Состояние проекта`: auth реализован (устарело с `bbc05ad`), фронтенд не пустой
+- [x] `CLAUDE.md` → `## Соглашения`: `authorizedFetch` для защищённых, `apiFetch` для публичных
 
 ## 15. Финальная проверка
 
