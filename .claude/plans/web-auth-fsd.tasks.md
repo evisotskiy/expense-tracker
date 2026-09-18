@@ -77,8 +77,8 @@
 
 ## 10. Примитив PasswordInput
 
-- [ ] `shared/ui/password-input.tsx` (кнопка `type="button"`, `aria-pressed`, возврат фокуса и каретки)
-- [ ] Тест: переключение `type`, `aria-pressed`, `aria-label`
+- [x] `shared/ui/password-input.tsx` (кнопка `type="button"`, `aria-pressed`, возврат фокуса и каретки)
+- [x] Тест: переключение `type`, `aria-pressed`, `aria-label`
 
 ## 11. Формы
 
