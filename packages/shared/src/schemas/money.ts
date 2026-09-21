@@ -52,6 +52,21 @@ export const moneyInputSchema = z
 
 export type Money = z.infer<typeof moneySchema>;
 
+/** То же, что NORMALIZED_MONEY, но допускает ведущий минус. */
+const NORMALIZED_SIGNED_MONEY = /^-?\d{1,10}\.\d{2}$/;
+
+/**
+ * Сумма, которая может быть отрицательной: баланс за период, остаток бюджета.
+ * Отдельно от moneySchema намеренно: иначе "-100.00" молча прошёл бы валидацию
+ * в поле amount при создании расхода.
+ */
+export const signedMoneySchema = z
+  .string()
+  .regex(NORMALIZED_SIGNED_MONEY, 'Сумма должна быть строкой вида "1234.56" или "-1234.56"')
+  .refine((value) => value !== '-0.00', { message: 'Ноль записывается без знака' });
+
+export type SignedMoney = z.infer<typeof signedMoneySchema>;
+
 /**
  * Приводит сумму к виду "1234.56".
  *
@@ -69,7 +84,9 @@ export function normalizeMoney(value: string): string {
  * Prisma возвращает объект с методом toFixed — этого достаточно, поэтому
  * пакет не тянет зависимость от decimal.js ради одного типа.
  */
-export function toMoneyString(value: { toFixed(digits: number): string } | string | number): string {
+export function toMoneyString(
+  value: { toFixed(digits: number): string } | string | number,
+): string {
   if (typeof value === 'string') {
     return normalizeMoney(value);
   }
@@ -81,10 +98,18 @@ export function toMoneyString(value: { toFixed(digits: number): string } | strin
   return value.toFixed(2);
 }
 
-/** Сумма в минорных единицах — нужна для арифметики без потери копеек. */
+/**
+ * Сумма в минорных единицах — нужна для арифметики без потери копеек.
+ *
+ * Знак разбирается отдельно от цифр: "-123.45" — это не Number("-123") + Number("45"),
+ * иначе минус применился бы только к целой части и копейки прибавлялись бы, а не вычитались.
+ */
 export function toMinorUnits(value: string): number {
-  const [whole = '0', fraction = '00'] = normalizeMoney(value).split('.');
-  return Number(whole) * 100 + Number(fraction);
+  const normalized = normalizeMoney(value);
+  const negative = normalized.startsWith('-');
+  const [whole = '0', fraction = '00'] = (negative ? normalized.slice(1) : normalized).split('.');
+  const minor = Number(whole) * 100 + Number(fraction);
+  return negative ? -minor : minor;
 }
 
 export function fromMinorUnits(minor: number): string {
@@ -98,12 +123,13 @@ export function sumMoney(values: readonly string[]): string {
   return fromMinorUnits(values.reduce((total, value) => total + toMinorUnits(value), 0));
 }
 
+/** Разность сумм без плавающей точки; результат может быть отрицательным. */
+export function subtractMoney(minuend: string, subtrahend: string): string {
+  return fromMinorUnits(toMinorUnits(minuend) - toMinorUnits(subtrahend));
+}
+
 /** Человекочитаемый вид для интерфейса: "1 234,56 ₽". */
-export function formatMoney(
-  value: string,
-  currency: SupportedCurrency,
-  locale = 'ru-RU',
-): string {
+export function formatMoney(value: string, currency: SupportedCurrency, locale = 'ru-RU'): string {
   const digits = CURRENCY_FRACTION_DIGITS[currency];
 
   return new Intl.NumberFormat(locale, {

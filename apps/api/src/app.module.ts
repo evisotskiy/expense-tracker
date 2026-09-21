@@ -12,8 +12,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BudgetsModule } from './modules/budgets/budgets.module';
 import { CategoriesModule } from './modules/categories/categories.module';
-import { ExpensesModule } from './modules/expenses/expenses.module';
 import { HealthModule } from './modules/health/health.module';
+import { TransactionsModule } from './modules/transactions/transactions.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -34,7 +34,7 @@ import { UsersModule } from './modules/users/users.module';
     AuthModule,
     UsersModule,
     CategoriesModule,
-    ExpensesModule,
+    TransactionsModule,
     BudgetsModule,
     HealthModule,
   ],

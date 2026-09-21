@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Язык
 
-Код, комментарии, сообщения об ошибках и документация в этом репозитории — на русском. Придерживайтесь этого стиля: комментарии объясняют *почему*, а не *что*.
+Код, комментарии, сообщения об ошибках и документация в этом репозитории — на русском. Придерживайтесь этого стиля: комментарии объясняют _почему_, а не _что_.
 
 ## Команды
 
@@ -45,10 +45,9 @@ pnpm --filter @expense-tracker/web lint
 
 ## Состояние проекта
 
-Каркас: схема БД, валидация и контроллеры написаны. `AuthService` (register/login/refresh/logout)
-и категории реализованы полностью; часть методов сервисов остаются заглушками
-`throw new Error('Не реализовано')` (expenses `create/update/remove`, budgets). Реализован
-`ExpensesService.findAll` и health-check.
+Каркас: схема БД, валидация и контроллеры написаны. `AuthService` (register/login/refresh/logout),
+категории и транзакции (доходы/расходы, `TransactionsModule`) реализованы полностью; методы
+сервиса budgets остаются заглушками `throw new Error('Не реализовано')`. Реализован health-check.
 
 Фронтенд — не пустой каркас: Feature-Sliced Design (`## Архитектура` ниже), контур сессии
 (access-токен в памяти, авто-refresh, guard-редиректы), страницы `/login`, `/register` и
@@ -64,11 +63,11 @@ pnpm --filter @expense-tracker/web lint
 Отсюда следуют два правила:
 
 - Меняя контракт API, правьте схему в `shared`, а не DTO.
-- Схемы с `transform` дают **два** разных типа: `z.input` (что шлёт клиент) и `z.output` (что получает сервис после валидации). Формы фронтенда типизируются через `*Input`, сервисы — через `*Data`. См. конец `schemas/expense.ts`.
+- Схемы с `transform` дают **два** разных типа: `z.input` (что шлёт клиент) и `z.output` (что получает сервис после валидации). Формы фронтенда типизируются через `*Input`, сервисы — через `*Data`. См. конец `schemas/transaction.ts`.
 
 ### Деньги — строки, не числа
 
-`packages/shared/src/schemas/money.ts` — обязательное чтение перед любой работой с суммами. В БД `Decimal(12,2)`, по сети — каноническая строка `"1234.56"`, арифметика — через `toMinorUnits`/`sumMoney` (в копейках). Сервисы обязаны прогонять `amount` из Prisma через `toMoneyString()` перед отдачей — паттерн в `ExpensesService.serialize`.
+`packages/shared/src/schemas/money.ts` — обязательное чтение перед любой работой с суммами. В БД `Decimal(12,2)`, по сети — каноническая строка `"1234.56"`, арифметика — через `toMinorUnits`/`sumMoney` (в копейках). Сервисы обязаны прогонять `amount` из Prisma через `toMoneyString()` перед отдачей — паттерн в `TransactionsService.serialize`.
 
 ### Даты
 
@@ -100,14 +99,14 @@ pnpm --filter @expense-tracker/web lint
 
 `apps/web/src` организован слоями снизу вверх:
 
-| Слой | Назначение |
-| --- | --- |
-| `shared` | транспорт, утилиты, ui-кит — не знает о домене |
-| `entities` | бизнес-сущности (`session`) — данные и способ их получить |
-| `features` | пользовательские действия (`login-form`, `register-form`, `logout-button`, `session-guard`) |
-| `widgets` | композиция фич в законченный кусок интерфейса (`auth-layout`, `app-header`) |
-| `views` | сборка экрана из widgets/features/entities (переименован из `pages` FSD — иначе путаница с Pages Router) |
-| `app` | только роутинг Next (`layout.tsx`, `page.tsx`, route groups) |
+| Слой       | Назначение                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------- |
+| `shared`   | транспорт, утилиты, ui-кит — не знает о домене                                                           |
+| `entities` | бизнес-сущности (`session`) — данные и способ их получить                                                |
+| `features` | пользовательские действия (`login-form`, `register-form`, `logout-button`, `session-guard`)              |
+| `widgets`  | композиция фич в законченный кусок интерфейса (`auth-layout`, `app-header`)                              |
+| `views`    | сборка экрана из widgets/features/entities (переименован из `pages` FSD — иначе путаница с Pages Router) |
+| `app`      | только роутинг Next (`layout.tsx`, `page.tsx`, route groups)                                             |
 
 Правило импортов — только вниз, с двумя исключениями:
 
@@ -150,11 +149,11 @@ pnpm --filter @expense-tracker/web lint
 
 Три `.env`, ни один не в git:
 
-| Шаблон | Копировать в | Кто читает |
-| --- | --- | --- |
-| `env.example` | `.env` | docker compose, `prisma.config.ts` |
-| `apps/api/api.env.example` | `apps/api/.env` | Nest `ConfigModule` |
-| `apps/web/web.env.example` | `apps/web/.env.local` | Next.js |
+| Шаблон                     | Копировать в          | Кто читает                         |
+| -------------------------- | --------------------- | ---------------------------------- |
+| `env.example`              | `.env`                | docker compose, `prisma.config.ts` |
+| `apps/api/api.env.example` | `apps/api/.env`       | Nest `ConfigModule`                |
+| `apps/web/web.env.example` | `apps/web/.env.local` | Next.js                            |
 
 `envFilePath: ['.env', '../../.env']` — первый файл побеждает, поэтому `DATABASE_URL` достаточно задать в корне. Переменные API валидируются на старте схемой `apps/api/src/config/env.schema.ts`; добавляя переменную, добавьте её и туда, иначе она не пройдёт в `ConfigService`.
 
@@ -180,10 +179,10 @@ pnpm --filter @expense-tracker/web lint
 
 Планы заметных задач хранятся в репозитории, в `.claude/plans/`, парой файлов:
 
-| Файл | Содержимое |
-| --- | --- |
-| `<имя>.md` | сам план: контекст (зачем задача), изменения по файлам, раздел «Порядок работ», раздел «Проверка» |
-| `<имя>.tasks.md` | чеклист `- [ ]` по разделам, порядок совпадает с «Порядком работ» плана |
+| Файл             | Содержимое                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------- |
+| `<имя>.md`       | сам план: контекст (зачем задача), изменения по файлам, раздел «Порядок работ», раздел «Проверка» |
+| `<имя>.tasks.md` | чеклист `- [ ]` по разделам, порядок совпадает с «Порядком работ» плана                           |
 
 Образец — пара `auth-users-cqrs-jwt.md` / `auth-users-cqrs-jwt.tasks.md`.
 

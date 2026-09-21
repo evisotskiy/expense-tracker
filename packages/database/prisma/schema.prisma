@@ -25,14 +25,14 @@ model User {
   passwordHash String
   name         String?
 
-  /// Валюта по умолчанию для новых расходов, ISO 4217 (RUB, USD, EUR).
+  /// Валюта по умолчанию для новых транзакций, ISO 4217 (RUB, USD, EUR).
   baseCurrency String @default("RUB") @db.VarChar(3)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   categories    Category[]
-  expenses      Expense[]
+  transactions  Transaction[]
   budgets       Budget[]
   refreshTokens RefreshToken[]
 
@@ -76,9 +76,9 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expenses Expense[]
-  budgets  Budget[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  budgets      Budget[]
 
   /// Уникальность в рамках пользователя, а не глобально.
   @@unique([userId, name])
@@ -86,33 +86,47 @@ model Category {
   @@map("categories")
 }
 
-model Expense {
-  id         String  @id @default(cuid())
-  userId     String
-  /// Расход может остаться без категории (например, после её удаления) — поэтому SetNull.
-  categoryId String?
+/// Доход или расход. Одна таблица на оба вида: отличаются они только знаком в отчётах,
+/// а запросы (лента, фильтры, итоги за месяц) у них общие.
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
 
-  /// Decimal(12, 2): точная десятичная арифметика в Postgres, без ошибок округления
-  /// при суммировании. На границе API преобразуется в строку — см. money.ts в shared.
-  amount Decimal @db.Decimal(12, 2)
+model Transaction {
+  id     String @id @default(cuid())
+  userId String
+  /// Категория обязательна: транзакция без неё не попадает ни в одну строку отчёта
+  /// и молча искажает итоги. Удаление категорий мягкое (isArchived), поэтому Restrict
+  /// не мешает «удалить» категорию — он лишь запрещает стереть ту, на которой висит история.
+  categoryId String
 
-  /// ISO 4217. Дублируется в расходе, чтобы смена baseCurrency не переписывала историю.
+  /// Decimal(12, 2) — как у Budget: точная арифметика в Postgres, на границе API строка.
+  /// Всегда положительная: знак несёт type, иначе «расход -500» и «расход 500» стали бы
+  /// двумя способами записать одно и то же.
+  amount Decimal         @db.Decimal(12, 2)
+  type   TransactionType
+
+  /// ISO 4217. Дублируется в транзакции, чтобы смена User.baseCurrency не переписывала историю.
   currency String @db.VarChar(3)
 
-  note    String?  @db.VarChar(500)
-  /// Когда деньги были потрачены (не когда запись создана).
-  spentAt DateTime
+  description String?  @db.VarChar(500)
+  /// Когда деньги реально пришли или ушли (не когда запись создана).
+  date        DateTime
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
-  /// Главный запрос приложения: «расходы пользователя за период, свежие сверху».
-  @@index([userId, spentAt(sort: Desc)])
+  /// Главный запрос приложения: «транзакции пользователя за период, свежие сверху».
+  /// Он же обслуживает сводку: она фильтрует ровно по userId + диапазону date.
+  @@index([userId, date(sort: Desc)])
+  /// Нужен проверке Restrict: без него Postgres делает seq scan по transactions
+  /// при каждой попытке удалить категорию.
   @@index([categoryId])
-  @@map("expenses")
+  @@map("transactions")
 }
 
 enum BudgetPeriod {
