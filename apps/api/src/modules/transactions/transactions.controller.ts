@@ -5,8 +5,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 // Не `import type` (несмотря на то, что классы используются здесь только как типы
 // параметров): `import type` стирает класс из design:paramtypes при emitDecoratorMetadata,
 // и глобальный ZodValidationPipe перестаёт узнавать DTO по metatype — валидация тела
-// запроса молча отключается (баг воспроизводится и в остальных контроллерах проекта,
-// импортирующих DTO как type; см. отчёт по этой задаче).
+// запроса молча отключается. Тот же приём — в auth/categories/budgets контроллерах.
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import {
   CreateTransactionDto,

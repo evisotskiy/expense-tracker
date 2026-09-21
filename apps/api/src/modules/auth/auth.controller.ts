@@ -21,7 +21,12 @@ import { AuthService } from './auth.service';
 import { type AuthResult, REFRESH_TOKEN_COOKIE, type SessionContext } from './auth.types';
 import { RefreshToken } from './decorators/refresh-token.decorator';
 import { SessionInfo } from './decorators/session-context.decorator';
-import { type LoginDto, type RegisterDto } from './dto/auth.dto';
+// Не `import type` (несмотря на то, что классы используются здесь только как типы параметров):
+// `import type` стирает класс из design:paramtypes при emitDecoratorMetadata, и глобальный
+// ZodValidationPipe перестаёт узнавать DTO по metatype — валидация тела запроса молча
+// отключается. Подробности — в transactions.controller.ts, где баг обнаружен.
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+import { LoginDto, RegisterDto } from './dto/auth.dto';
 
 @ApiTags('auth')
 @Controller('auth')

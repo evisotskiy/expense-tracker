@@ -107,34 +107,32 @@
       Чинится заменой на `signedMoneySchema`, но `BudgetsService.findProgress` пока заглушка,
       поэтому трогать сейчас необязательно.
 
-- [x] **Критический баг, обнаруженный и исправленный только в своём модуле (вне объёма
-      задачи — затрагивает весь проект):** глобальный `ZodValidationPipe` не валидировал тело
-      запроса **ни в одном** контроллере API. Причина: все DTO импортируются в контроллерах как
-      `import { type XDto }` — TypeScript при `emitDecoratorMetadata` стирает класс из
-      `design:paramtypes` для type-only импортов, и в скомпилированном `dist` параметр получает
-      тип `Object`/`Function` вместо самого DTO-класса. `nestjs-zod`'s `ZodValidationPipe` ищет
-      схему по `metatype.isZodDto`, это условие не выполняется, и пайп молча пропускает значение
-      без валидации.
+- [x] **Критический баг, исправлен во всех контроллерах проекта:** глобальный
+      `ZodValidationPipe` не валидировал тело запроса **ни в одном** контроллере API. Причина:
+      все DTO импортировались в контроллерах как `import { type XDto }` — TypeScript при
+      `emitDecoratorMetadata` стирает класс из `design:paramtypes` для type-only импортов, и в
+      скомпилированном `dist` параметр получал тип `Object`/`Function` вместо самого DTO-класса.
+      `nestjs-zod`'s `ZodValidationPipe` ищет схему по `metatype.isZodDto`, это условие не
+      выполнялось, и пайп молча пропускал значение без валидации.
 
-      **Подтверждено вживую:** `POST /auth/register` с `{"email":"not-an-email","password":"abc"}`
-          вернул `201` вместо `400` (email не по формату, пароль без цифр/заглавных). До правки
-          `TransactionsController` то же самое подтвердилось на транзакциях: `POST /transactions` с
-          некорректной суммой `"1 234"` и датой в будущем давали `500 Внутренняя ошибка сервера`
-          (запрос долетал до Prisma необработанным) вместо `400`.
+      **Подтверждено вживую до правки:** `POST /auth/register` с
+              `{"email":"not-an-email","password":"abc"}` вернул `201` вместо `400`; `POST /transactions`
+              с некорректной суммой `"1 234"` и датой в будущем давали `500 Внутренняя ошибка сервера`
+              (запрос долетал до Prisma необработанным) вместо `400`. На скомпилированном `dist`
+              `categories.controller.js` и `budgets.controller.js` получали `design:paramtypes` вида
+              `[String, Function]` для DTO-параметров — тот же дефект.
 
-          Проверено на скомпилированном `dist`: `categories.controller.js` и `budgets.controller.js`
-          получают `design:paramtypes` вида `[String, Function]` для DTO-параметров — тот же дефект.
+              **Исправлено:** в `auth.controller.ts`, `categories.controller.ts`, `budgets.controller.ts`
+              и `transactions.controller.ts` импорт DTO переведён с `import type` на обычный (value)
+              импорт, с `eslint-disable-next-line @typescript-eslint/consistent-type-imports` и
+              комментарием, объясняющим причину — это восстанавливает `design:paramtypes` и включает
+              валидацию во всех четырёх модулях.
 
-          **Что сделано:** в `transactions.controller.ts` импорт DTO переведён с `import type` на
-          обычный (value) импорт, с `eslint-disable-next-line @typescript-eslint/consistent-type-imports`
-          и комментарием, объясняющим причину — это восстанавливает `design:paramtypes` и делает
-          валидацию транзакций рабочей (подтверждено: `400` с разбором по полям на некорректной сумме
-          и дате из будущего).
-
-          **Что НЕ сделано (вне объёма этой задачи):** `auth.controller.ts`, `categories.controller.ts`,
-          `budgets.controller.ts` не тронуты — там баг остаётся. Исправление требует либо того же
-          приёма (value-импорт DTO + eslint-disable) в каждом контроллере, либо смены правила
-          `@typescript-eslint/consistent-type-imports` в `packages/eslint-config/base.js`, либо
-          локальных пайпов с явной схемой (`@Body(new ZodValidationPipe(schema))`). Это отдельная
-          задача, затрагивающая весь проект, а не только транзакции — решение и приоритет должны
-          остаться за пользователем.
+              **Подтверждено вживую после правки** (на скомпилированном `dist`, сервер перезапущен):
+              `design:paramtypes` во всех трёх ранее сломанных контроллерах теперь несёт реальные классы
+              (`auth_dto_1.RegisterDto`, `category_dto_1.CreateCategoryDto`, `budget_dto_1.CreateBudgetDto`
+              и т.д.), а не `Object`/`Function`; `POST /auth/register` с невалидным email → `400`
+              («Некорректный email»), со слабым паролем → `400` (перечень нарушенных правил), валидная
+              регистрация по-прежнему `201`; `POST /categories` с `color: "not-a-color"` → `400`, валидное
+              создание — `201`; `POST /budgets` без обязательного `amount` → `400`;
+              `pnpm typecheck && pnpm lint && pnpm test && pnpm build` — всё зелёное (93 API-теста).

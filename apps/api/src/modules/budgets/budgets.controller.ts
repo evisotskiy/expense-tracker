@@ -3,7 +3,12 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { BudgetsService } from './budgets.service';
-import { type CreateBudgetDto, type UpdateBudgetDto } from './dto/budget.dto';
+// Не `import type` (несмотря на то, что классы используются здесь только как типы параметров):
+// `import type` стирает класс из design:paramtypes при emitDecoratorMetadata, и глобальный
+// ZodValidationPipe перестаёт узнавать DTO по metatype — валидация тела запроса молча
+// отключается. Подробности — в transactions.controller.ts, где баг обнаружен.
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+import { CreateBudgetDto, UpdateBudgetDto } from './dto/budget.dto';
 
 @ApiTags('budgets')
 @Controller('budgets')
