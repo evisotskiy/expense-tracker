@@ -1,3 +1,12 @@
 {
+  "permissions": {
+    "ask": [
+      "Bash(git commit *)",
+      "Bash(git push *)"
+    ],
+    "allow": [
+      "Bash(git add *)"
+    ]
+  },
   "outputStyle": "default"
 }
