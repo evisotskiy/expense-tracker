@@ -140,7 +140,9 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
                     onCheckedChange={(checked) => field.onChange(checked === true)}
                   />
                 </FormControl>
-                <FormLabel className="text-sm leading-snug font-normal">
+                {/* Базовый Label — flex-строка под иконку+текст, тут нужен обычный
+                    переносящийся текст, поэтому display переопределён на block. */}
+                <FormLabel className="block text-sm leading-snug font-normal">
                   Согласен с{' '}
                   <Link
                     href="/terms"
