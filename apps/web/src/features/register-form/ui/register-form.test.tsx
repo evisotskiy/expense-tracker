@@ -11,6 +11,15 @@ describe('RegisterForm', () => {
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Пароль')).toBeInTheDocument();
     expect(screen.getByLabelText('Повторите пароль')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'пользовательским соглашением' })).toHaveAttribute(
+      'href',
+      '/terms',
+    );
+    expect(screen.getByRole('link', { name: 'политикой обработки данных' })).toHaveAttribute(
+      'href',
+      '/privacy',
+    );
   });
 
   it('пароль без заглавной буквы показывает сообщение из passwordSchema shared', async () => {
@@ -57,7 +66,22 @@ describe('RegisterForm', () => {
     );
   });
 
-  it('успешный сабмит передаёт только email и password, без confirmPassword', async () => {
+  it('успешный сабмит передаёт только email и password, без confirmPassword и agreedToTerms', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    render(<RegisterForm onSubmit={onSubmit} />);
+
+    await user.type(screen.getByLabelText('Email'), 'user@example.com');
+    await user.type(screen.getByLabelText('Пароль'), 'Secret123');
+    await user.type(screen.getByLabelText('Повторите пароль'), 'Secret123');
+    await user.click(screen.getByRole('checkbox'));
+    await user.click(screen.getByRole('button', { name: /Зарегистрироваться/ }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith({ email: 'user@example.com', password: 'Secret123' });
+  });
+
+  it('без согласия с соглашением сабмит блокируется', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();
     render(<RegisterForm onSubmit={onSubmit} />);
@@ -67,8 +91,8 @@ describe('RegisterForm', () => {
     await user.type(screen.getByLabelText('Повторите пароль'), 'Secret123');
     await user.click(screen.getByRole('button', { name: /Зарегистрироваться/ }));
 
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    expect(onSubmit).toHaveBeenCalledWith({ email: 'user@example.com', password: 'Secret123' });
+    await screen.findByText('Нужно принять условия, чтобы продолжить');
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('«глаз» переключает видимость пароля и возвращается обратно', async () => {

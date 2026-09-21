@@ -2,11 +2,13 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import { useForm, useWatch } from 'react-hook-form';
 
 import { applyApiErrors } from '@/shared/lib/form/apply-api-errors';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 import { Button } from '@/shared/ui/button';
+import { Checkbox } from '@/shared/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -37,7 +39,7 @@ interface RegisterFormProps {
 export function RegisterForm({ onSubmit }: RegisterFormProps) {
   const form = useForm<RegisterFormValues, undefined, RegisterFormData>({
     resolver: zodResolver(registerFormSchema),
-    defaultValues: { email: '', password: '', confirmPassword: '' },
+    defaultValues: { email: '', password: '', confirmPassword: '', agreedToTerms: false },
     mode: 'onTouched',
   });
 
@@ -121,6 +123,44 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
                   className="h-11"
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="agreedToTerms"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex flex-row items-start gap-2">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={(checked) => field.onChange(checked === true)}
+                  />
+                </FormControl>
+                <FormLabel className="text-sm leading-snug font-normal">
+                  Согласен с{' '}
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary underline-offset-4 hover:underline"
+                  >
+                    пользовательским соглашением
+                  </Link>{' '}
+                  и{' '}
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary underline-offset-4 hover:underline"
+                  >
+                    политикой обработки данных
+                  </Link>
+                </FormLabel>
+              </div>
               <FormMessage />
             </FormItem>
           )}

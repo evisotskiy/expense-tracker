@@ -5,7 +5,13 @@ import { z } from 'zod';
 // имя — задача профиля, а не регистрации.
 export const registerFormSchema = registerSchema
   .pick({ email: true, password: true })
-  .extend({ confirmPassword: z.string().min(1, 'Повторите пароль') })
+  .extend({
+    confirmPassword: z.string().min(1, 'Повторите пароль'),
+    // Согласие — чисто форменное поле, на сервер не уходит (см. RegisterPayload).
+    agreedToTerms: z
+      .boolean()
+      .refine((value) => value === true, { message: 'Нужно принять условия, чтобы продолжить' }),
+  })
   .refine((values) => values.password === values.confirmPassword, {
     message: 'Пароли не совпадают',
     // Без path ошибка сядет на форму целиком, а не на поле подтверждения.
