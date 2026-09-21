@@ -135,9 +135,12 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
             <FormItem>
               <div className="flex flex-row items-start gap-2">
                 <FormControl>
+                  {/* mt-0.5 — компенсация leading-snug лейбла: без него верх чекбокса
+                      совпадает с верхом строки текста, а не с самими глифами. */}
                   <Checkbox
                     checked={field.value}
                     onCheckedChange={(checked) => field.onChange(checked === true)}
+                    className="mt-0.5"
                   />
                 </FormControl>
                 {/* Базовый Label — flex-строка под иконку+текст, тут нужен обычный
