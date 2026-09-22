@@ -24,6 +24,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     return accessTokenStore.onExpired(() => {
+      // onExpired срабатывает и на bootstrap-проверке при первом заходе анонима —
+      // там 401 ожидаем, и bootstrapSession сам положит null в кэш через
+      // собственный возврат. Реагируем здесь только когда сессия ДЕЙСТВИТЕЛЬНО
+      // была и пропала: иначе (а) анонимный визит на /register или /login тут же
+      // отбрасывало бы обратно на /login, и (б) queryClient.clear() ниже рвёт тот
+      // же bootstrap-запрос, из которого сейчас исполняется этот колбэк —
+      // react-query теряет с ним связь, и экран виснет на сплэше навсегда.
+      const hadSession = Boolean(queryClient.getQueryData(sessionKeys.current()));
+      if (!hadSession) {
+        return;
+      }
+
       // Порядок важен: сначала очистить кэш чужого пользователя, потом сразу
       // подставить null — иначе смонтированный observer перезапустит queryFn
       // и при живой cookie пользователь молча «войдёт обратно».
