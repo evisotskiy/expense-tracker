@@ -133,7 +133,10 @@ pnpm --filter @expense-tracker/web lint
 `shadcn init` — он штатно перезаписывает `components.json` и `globals.css`. Алиасы в
 `components.json` ведут в `@/shared/ui` (сами компоненты) и `@/shared/lib/cn` (утилита класс-
 мёржа); текущая версия CLI генерирует `import { cn } from "cn"` (отдельный npm-пакет) —
-поправлять на `@/shared/lib/cn` вручную после каждого `add`.
+поправлять на `@/shared/lib/cn` вручную после каждого `add`. CLI заодно дописывает пакет `cn`
+в зависимости `apps/web/package.json` — проверяйте `git diff package.json` после каждого `add`
+и убирайте `cn` из `dependencies`, если импорт поправлен: иначе исполняемый npm-пакет остаётся
+мёртвым грузом в проде.
 
 Токены темы живут в `@theme` в `apps/web/src/app/globals.css` (и переопределяются в
 `@media (prefers-color-scheme: dark)`): добавляя новый компонент, проверьте, что все токены,
