@@ -51,7 +51,7 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
       // видно на первый взгляд, что реально уходит на сервер.
       await onSubmit({ email: values.email, password: values.password });
     } catch (error) {
-      const message = applyApiErrors(error, form.setError, FIELD_NAMES);
+      const message = applyApiErrors(error, form.setError, FIELD_NAMES, 'email');
       if (message) {
         form.setError('root', { message });
       }

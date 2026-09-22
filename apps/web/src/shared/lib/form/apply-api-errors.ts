@@ -10,10 +10,20 @@ import { ApiRequestError } from '../../api/api-client';
  * теряет сообщение, поэтому всё, что не входит в список (включая ключ '_',
  * которым сервер помечает ошибки уровня объекта), уходит в общий алерт.
  */
-export function applyApiErrors<TFieldValues extends FieldValues>(
+export function applyApiErrors<
+  TFieldValues extends FieldValues,
+  const TField extends readonly string[] = readonly string[],
+>(
   error: unknown,
   setError: UseFormSetError<TFieldValues>,
-  fieldNames: readonly string[],
+  fieldNames: TField,
+  /**
+   * Поле, на которое сажаем 409 без errors (email при регистрации, name у категории).
+   * `TField[number]`, а не независимый `TField` — иначе TypeScript унифицировал бы
+   * вывод типа по обоим параметрам и молча расширил fieldNames опечаткой из
+   * conflictField вместо того, чтобы её отклонить.
+   */
+  conflictField?: TField[number],
 ): string | null {
   if (!(error instanceof ApiRequestError)) {
     return 'Не удалось выполнить запрос. Проверьте соединение и попробуйте снова.';
@@ -34,7 +44,7 @@ export function applyApiErrors<TFieldValues extends FieldValues>(
         continue;
       }
 
-      if (field === '_' || !fieldNames.includes(field)) {
+      if (field === '_' || !(fieldNames as readonly string[]).includes(field)) {
         generalMessage ??= message;
         continue;
       }
@@ -47,9 +57,14 @@ export function applyApiErrors<TFieldValues extends FieldValues>(
     return generalMessage;
   }
 
-  // 409 (email уже зарегистрирован) приходит без errors — привязываем к email вручную.
-  if (error.statusCode === 409 && fieldNames.includes('email')) {
-    setError('email' as Path<TFieldValues>, { message: error.message }, { shouldFocus: true });
+  // 409 приходит без errors — привязываем к полю-кандидату вручную (email при
+  // регистрации, name при создании категории).
+  if (error.statusCode === 409 && conflictField && fieldNames.includes(conflictField)) {
+    setError(
+      conflictField as string as Path<TFieldValues>,
+      { message: error.message },
+      { shouldFocus: true },
+    );
     return null;
   }
 
