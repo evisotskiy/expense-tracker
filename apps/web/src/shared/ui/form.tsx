@@ -30,9 +30,13 @@ const FormFieldContext = React.createContext<FormFieldContextValue>({} as FormFi
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  // По умолчанию совпадает с TFieldValues — форм без transform (login/register)
+  // это не касается. Нужен формам вроде transaction-form, где на выходе
+  // resolver'а типы полей меняются (moneyInputSchema, isoDateSchema).
+  TTransformedValues = TFieldValues,
 >({
   ...props
-}: ControllerProps<TFieldValues, TName>) => {
+}: ControllerProps<TFieldValues, TName, TTransformedValues>) => {
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller {...props} />
