@@ -38,16 +38,28 @@ const TRANSACTION_SELECT = {
   },
 } satisfies Prisma.TransactionSelect;
 
+/**
+ * Бизнес-логика транзакций: CRUD, лента с курсорной пагинацией и месячная сводка.
+ * Владение проверяется в каждом методе по `userId` — свой/чужой ресурс не различаются
+ * по коду ответа (см. {@link TransactionsService.findOne}).
+ */
 @Injectable()
 export class TransactionsService {
   // @Inject: см. common/guards/jwt-auth.guard.ts.
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   /**
+   * Лента транзакций пользователя с фильтрами и курсорной пагинацией.
+   *
    * Курсорная выборка: берём на одну запись больше лимита, чтобы понять,
    * есть ли следующая страница, без отдельного COUNT. id вторым ключом
    * сортировки — тай-брейкер: без него курсорная пагинация может задвоить
    * или пропустить запись при одинаковых date.
+   *
+   * @param userId - id владельца транзакций.
+   * @param filters - курсор, лимит и фильтры по дате/типу/категории.
+   * @returns `items` — страница транзакций (сумма уже в канонической строке),
+   * `nextCursor` — id для следующей страницы или `null`, если страница последняя.
    */
   async findAll(userId: string, filters: TransactionFilters) {
     const { cursor, limit, dateFrom, dateTo, type, categoryId } = filters;
@@ -78,8 +90,15 @@ export class TransactionsService {
   }
 
   /**
+   * Одна транзакция пользователя.
+   *
    * findFirst с userId, а не findUnique по id: чужая транзакция должна давать 404,
    * а не 403 — существование чужого id не подтверждаем.
+   *
+   * @param userId - id владельца.
+   * @param id - id транзакции.
+   * @returns Транзакция с развёрнутой категорией.
+   * @throws NotFoundException если транзакция не найдена или принадлежит другому пользователю.
    */
   async findOne(userId: string, id: string) {
     const row = await this.prisma.client.transaction.findFirst({
@@ -94,6 +113,17 @@ export class TransactionsService {
     return this.serialize(row);
   }
 
+  /**
+   * Создаёт транзакцию.
+   *
+   * @param userId - id владельца.
+   * @param input - сумма, тип, валюта, категория, дата и необязательное описание
+   * (уже провалидированные и нормализованные `createTransactionSchema`).
+   * @returns Созданная транзакция с развёрнутой категорией.
+   * @throws NotFoundException если категория не найдена, принадлежит другому пользователю
+   * либо была удалена между проверкой и вставкой (гонка, см. {@link normalizeCategoryError}).
+   * @throws BadRequestException если категория архивирована.
+   */
   async create(userId: string, input: CreateTransactionData) {
     await this.assertCategoryUsable(userId, input.categoryId);
 
@@ -109,6 +139,18 @@ export class TransactionsService {
     }
   }
 
+  /**
+   * Частично изменяет транзакцию.
+   *
+   * @param userId - id владельца.
+   * @param id - id транзакции.
+   * @param input - изменяемые поля (частичный `createTransactionSchema`).
+   * @returns Обновлённая транзакция с развёрнутой категорией.
+   * @throws NotFoundException если транзакция не найдена, либо (когда `categoryId` меняется)
+   * если новая категория не найдена, принадлежит другому пользователю или удалена между
+   * проверкой и обновлением (гонка, см. {@link normalizeCategoryError}).
+   * @throws BadRequestException если новая категория архивирована.
+   */
   async update(userId: string, id: string, input: UpdateTransactionData) {
     const existing = await this.prisma.client.transaction.findFirst({
       where: { id, userId },
@@ -139,9 +181,16 @@ export class TransactionsService {
   }
 
   /**
+   * Удаляет транзакцию.
+   *
    * Удаление физическое: в отличие от категорий, на транзакции никто не ссылается.
    * deleteMany, а не delete — только он позволяет отфильтровать по userId
    * в одном запросе с id (то же рассуждение, что в CategoriesService.remove).
+   *
+   * @param userId - id владельца.
+   * @param id - id транзакции.
+   * @returns Ничего.
+   * @throws NotFoundException если транзакция не найдена или принадлежит другому пользователю.
    */
   async remove(userId: string, id: string) {
     const { count } = await this.prisma.client.transaction.deleteMany({
@@ -153,6 +202,19 @@ export class TransactionsService {
     }
   }
 
+  /**
+   * Сводка за месяц: суммы доходов/расходов, баланс и разбивка по категориям.
+   *
+   * Считается только в базовой валюте пользователя — суммировать разные валюты
+   * без курсов было бы численной ложью, а курсов в проекте нет.
+   *
+   * @param userId - id пользователя.
+   * @param query - месяц и год сводки (оба обязательны, без значения по умолчанию).
+   * @returns Валюта отчёта, суммы доходов/расходов, баланс (может быть отрицательным)
+   * и разбивка по категориям с подписью и цветом.
+   * @throws Error (Prisma `findUniqueOrThrow`) если пользователь из токена не существует в БД —
+   * не ожидается в норме, токен выдаётся только существующему пользователю.
+   */
   async summary(userId: string, query: TransactionSummaryQuery) {
     const { month, year } = query;
 
@@ -222,9 +284,17 @@ export class TransactionsService {
   }
 
   /**
+   * Проверяет, что категорию можно использовать в транзакции этого пользователя.
+   *
    * FK проверяет только существование категории, но не владельца: без этой проверки
    * чужой cuid в теле запроса повесил бы транзакцию на чужую категорию, и она
    * всплыла бы в сводке.
+   *
+   * @param userId - id пользователя, которому должна принадлежать категория.
+   * @param categoryId - id проверяемой категории.
+   * @returns Ничего — успешное завершение означает, что категорию можно использовать.
+   * @throws NotFoundException если категория не найдена или принадлежит другому пользователю.
+   * @throws BadRequestException если категория архивирована.
    */
   private async assertCategoryUsable(userId: string, categoryId: string): Promise<void> {
     const category = await this.prisma.client.category.findFirst({
@@ -246,10 +316,16 @@ export class TransactionsService {
   }
 
   /**
+   * Приводит ошибку вставки/обновления к понятному HTTP-ответу.
+   *
    * Страховка от гонки между assertCategoryUsable и записью (категорию успели
    * заархивировать физическим удалением между проверкой и вставкой). Голый
    * PrismaClientKnownRequestError — не HttpException, AllExceptionsFilter отдал бы
    * на него 500 вместо внятного ответа, поэтому catch обязателен даже здесь.
+   *
+   * @param error - ошибка, пойманная в `create`/`update`.
+   * @returns `NotFoundException`, если ошибка — потеря FK на категорию (коды `P2003`/`P2025`
+   * Prisma); иначе исходная ошибка без изменений — вызывающий код должен её перебросить.
    */
   private normalizeCategoryError(error: unknown): unknown {
     if (
@@ -263,9 +339,14 @@ export class TransactionsService {
   }
 
   /**
+   * Готовит запись Prisma к отдаче клиенту.
+   *
    * Prisma отдаёт amount объектом Decimal — JSON.stringify превратил бы его
    * в что-то неочевидное. Приводим к канонической строке на выходе из сервиса,
    * ровно как ожидает transactionSchema из @expense-tracker/shared.
+   *
+   * @param transaction - запись с полем `amount` типа Prisma `Decimal`.
+   * @returns Та же запись с `amount`, приведённым к строке вида `"1234.56"`.
    */
   private serialize<T extends { amount: Prisma.Decimal }>(transaction: T) {
     return { ...transaction, amount: toMoneyString(transaction.amount) };
