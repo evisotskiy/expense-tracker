@@ -117,6 +117,7 @@ pnpm --filter @expense-tracker/web lint
   только по явному запросу, как и `git commit`.
 
 Формат сообщений коммита и порядок коммита — в skill `/commit` (`.claude/skills/commit/SKILL.md`).
+Открытие PR — skill `/pr <название> [ветка]` (`.claude/skills/pr/SKILL.md`).
 
 ## Соглашения
 
