@@ -121,7 +121,7 @@ pnpm --filter @expense-tracker/web lint
 
 ## Соглашения
 
-- Prettier: одинарные кавычки, `printWidth: 100`, точки с запятой, `trailingComma: all`.
+- Prettier: одинарные кавычки, `printWidth: 120`, точки с запятой, `trailingComma: all`.
 - ESLint (flat config): обязательны inline type imports (`import { type Foo }` / `import type`), `no-console` кроме `warn`/`error`, `eqeqeq: smart`. Для Nest отключены правила о «бесполезном конструкторе» — это parameter properties DI.
 - TS строгий, включая `noUncheckedIndexedAccess` и `noImplicitOverride` (отсюда `override canActivate` в guard).
 
