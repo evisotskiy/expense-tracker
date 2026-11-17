@@ -29,14 +29,24 @@ const CREDENTIALS_SELECT = {
   passwordHash: true,
 } satisfies Prisma.UserSelect;
 
+/** Публичный профиль пользователя (GET users/me): AuthUser + дата регистрации, без passwordHash. */
 export interface UserProfile extends AuthUser {
   createdAt: Date;
 }
 
+/**
+ * AuthUser + passwordHash. Существует только ради проверки пароля при логине;
+ * наружу (в ответы API, логи) этот тип попадать не должен.
+ */
 export interface UserCredentials extends AuthUser {
   passwordHash: string;
 }
 
+/**
+ * Данные для создания пользователя. passwordHash — уже готовый хеш: хеширование
+ * делает сервис, репозиторий пароль в открытом виде не видит.
+ * name и baseCurrency необязательны — при отсутствии подставляются дефолты схемы БД.
+ */
 export interface CreateUserData {
   email: string;
   passwordHash: string;
@@ -44,6 +54,11 @@ export interface CreateUserData {
   baseCurrency?: string;
 }
 
+/**
+ * Форма строки Prisma для AUTH_USER_SELECT. Описана вручную, а не через
+ * Prisma.UserGetPayload, чтобы toAuthUser принимал и более широкие выборки
+ * (PROFILE_SELECT, CREDENTIALS_SELECT) — они структурно совместимы.
+ */
 type AuthUserRow = { id: string; email: string; name: string | null; baseCurrency: string };
 
 /**
@@ -58,6 +73,10 @@ export class UsersRepository {
   // подробности в common/guards/jwt-auth.guard.ts.
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
+  /**
+   * Профиль для GET users/me. Возвращает null, если пользователя нет (например, удалён,
+   * а токен ещё жив) — 404/401 выбирает вызывающая сторона. passwordHash не выбирается.
+   */
   async findProfileById(id: string): Promise<UserProfile | null> {
     const user = await this.prisma.client.user.findUnique({
       where: { id },
@@ -67,6 +86,10 @@ export class UsersRepository {
     return user ? { ...this.toAuthUser(user), createdAt: user.createdAt } : null;
   }
 
+  /**
+   * Минимальный набор полей для AuthResponse.user (например, при refresh, когда известен
+   * только id из токена). Возвращает null, если пользователь не найден.
+   */
   async findAuthById(id: string): Promise<AuthUser | null> {
     const user = await this.prisma.client.user.findUnique({
       where: { id },
