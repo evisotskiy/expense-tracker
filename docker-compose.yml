@@ -31,8 +31,11 @@ services:
       - '8080'
       - --dsn
       - 'postgres://expense:expense@postgres:5432/expense_tracker?sslmode=disable'
+    # без service_healthy dbhub стартует сразу после контейнера postgres и может упасть,
+    # пока база ещё не принимает соединения
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres-data:
