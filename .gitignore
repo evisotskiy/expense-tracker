@@ -21,6 +21,9 @@ packages/database/src/generated/
 .env.*
 !*.env.example
 
+# локальные файлы и папки (всё, где в имени есть «.local»: settings.local.json, .env.local и т. п.)
+*.local*
+
 # логи
 *.log
 npm-debug.log*
